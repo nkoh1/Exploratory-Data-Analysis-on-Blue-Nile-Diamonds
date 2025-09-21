@@ -47,7 +47,7 @@ color_percent<-(grouped / totals)*100
 new_df<-data.frame(Data2,color_percent)
 
 new_df<-new_df[,c(1,2,3,4,6)] #removing duplicated rows for clarity
-new_df #Freq is already converted to a percent.
+new_df
 ```
 
 
@@ -90,9 +90,6 @@ ggplot(data,aes(x=color,y=price,fill=color))+
   labs(x="Color",y="Price",title="Color to Diamond Price Distribution, without Outliers")
   
 ```
-
-
-
 
 ### Clarity
 
@@ -194,7 +191,6 @@ hist(data$carat,xlab="Carat Weight",ylab="# of Diamonds",main="Distribution of B
 
 
 ```
-  
 
 ```{r}
 #Checking the relationship between price and carat
@@ -240,16 +236,9 @@ ggplot(data, aes(x=carat, y=pricepercarat)) +
 
 ```
 
-
-
-
 ### Cut 
 
 ```{r}
-
-levels(data$cut)
-
-#creating scatterplot to see relationship between cut and price by group
 ggplot(data = data, mapping = aes(x=cut,y=price))+
   scale_y_continuous(labels = scales::comma)+
   geom_point(size=2.5, col="darkslategrey",alpha=0.3)+
@@ -422,3 +411,4 @@ anova.tab
 ```{r}
 qf(0.95,1,1212)
 ```
+

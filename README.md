@@ -6,6 +6,6 @@ The objective of this project was to perform exploratory data analysis using the
 # Programming Language Used
 R
 
-#Libraries Used\
+# Libraries Used
 Tidyverse (data visualization) \
 MASS (Box Cox)

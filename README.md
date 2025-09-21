@@ -7,5 +7,5 @@ The objective of this project was to perform exploratory data analysis using the
 R
 
 #Libraries used
-Tidyverse (data visualization)
+Tidyverse (data visualization) \
 MASS (Box Cox)

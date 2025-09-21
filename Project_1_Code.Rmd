@@ -1,0 +1,424 @@
+---
+title: "Project 1 Code"
+author: "Seth Bitney, Sarah Hall, Nathan Koh, Hannah Richardson"
+date: "2024-10-27"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+library(tidyverse)
+data <- read.csv('diamonds4.csv')
+```
+
+## Individual Variable Code
+
+
+### Color
+
+```{r}
+#reorder bar chart so that it goes from near-colorless (J,I,H,G) to colorless (F,E,D)
+data$color <-factor(data$color, levels =c("J","I","H","G","F","E","D"))
+#data$color <-factor(data$color, levels =c("D","E","F","G","H","I","J"))
+
+#plot the bar chart
+ggplot(data, aes(x=color,y=price))+
+  geom_bar(stat="identity", fill = "tomato3")+
+  scale_y_continuous(labels = scales::comma)+
+  theme(axis.text.x = element_text(),
+        plot.title=element_text(hjust = 0.5))+
+  labs(x="Color",y="Price", title = "Distribution of Diamond Price by Color Grade")
+
+```
+ *Fig 1. Distribution of Diamonds *\
+
+
+To provide additional context regarding the color variable, we can create a new dataframe which shows the proportion of the number of diamonds in each color group, the average carat, average price, and how frequent it is within the dataset.  
+
+```{r}
+Data2<-data %>% 
+  group_by(color) %>% 
+  summarize(avg.prices=mean(price),avg.carat=mean(carat),total = n()) 
+
+grouped <-table(data$color)
+totals<-sum(grouped)
+
+color_percent<-(grouped / totals)*100
+
+new_df<-data.frame(Data2,color_percent)
+
+new_df<-new_df[,c(1,2,3,4,6)] #removing duplicated rows for clarity
+new_df #Freq is already converted to a percent.
+```
+
+
+
+
+```{r}
+ggplot(new_df, aes(x=color,y=avg.prices))+
+  geom_bar(stat="identity", fill="darkslategrey", col="white")+
+  scale_y_continuous(labels = scales::comma)+
+  theme(axis.text.x = element_text(),
+        plot.title=element_text(hjust = 0.5))+
+  labs(x="Color",y="Average Price", title = "Distribution of Average Diamond Price by Color")
+```
+*Fig. 2: Dataframe showing average price across each diamond color grade*\
+
+```{r}
+ggplot(new_df, aes(x=color,y=Freq))+
+  geom_bar(stat="identity",fill="tomato3")+
+  theme(axis.text.x = element_text(angle=0),
+        plot.title=element_text(hjust = 0.5))+
+  labs(x="Color",y="Frequency", title = "Frequency of Diamonds across the Color Grade Scale")
+```
+
+
+*Note: Due to the extreme outliers across all color grades, this made it difficult to see the boxplots themselves. Due to this, two boxplots were created (Fig.4 and Fig.5) for clarity. The first boxplot contains the outliers, while the second boxplot is rescaled so that the plots themselves are visible.*
+
+```{r }
+ggplot(data,aes(x=color,y=price,fill=color))+
+  geom_boxplot()+
+  scale_y_continuous(labels = scales::comma)+
+  theme(axis.text.x = element_text(),plot.title=element_text(hjust = 0.5))+
+  labs(x="Color",y="Price", title = "Boxplot of Diamond Color Against Price, with Outliers")
+```
+*Fig.4: Color-Price Boxplot with Outlier Indicators*
+
+```{r}
+ggplot(data,aes(x=color,y=price,fill=color))+
+  geom_boxplot(outlier.color=NA)+ylim(0,12500)+
+  theme(axis.text.x = element_text(),plot.title=element_text(hjust = 0.5))+
+  labs(x="Color",y="Price",title="Color to Diamond Price Distribution, without Outliers")
+  
+```
+
+
+
+
+### Clarity
+
+```{r}
+Clarity_Table <- table(data$clarity)
+round(prop.table(Clarity_Table), 4)
+
+data$clarity <-factor(data$clarity, levels =c("SI2","SI1","VS2","VS1","VVS2","VVS1","IF", "FL"))
+```
+
+
+```{r}
+ggplot(data, aes(x=clarity, y=price))+
+  geom_bar(stat="identity", fill="darkslategrey")+
+  scale_y_continuous(labels = scales::comma)+
+  theme(axis.text.x = element_text(angle = 0),
+        plot.title = element_text(hjust = 0.5))+
+  labs(x="Clarity", y="Price",title="Distribution of Clarity vs Cumulative Price")
+```
+
+
+```{r}
+# Alt plot by mean
+ggplot(data, aes(x=clarity, y=price))+
+  scale_y_continuous(labels = scales::comma)+
+  stat_summary(fun = "mean", geom = "bar",fill="darkslategrey")+
+  theme(axis.text.x = element_text(angle = 0),
+        plot.title = element_text(hjust = 0.5))+
+  labs(x="Clarity", y="Price",title="Distribution of Clarity vs Average Price")
+
+group_mean<- aggregate(x= data$price,
+                      # Specify group indicator
+                      by = list(data$clarity),      
+                      # Specify function (i.e. mean)
+                      FUN = mean)
+print(group_mean)
+```
+
+
+```{r}
+ggplot(data, aes(x=clarity, y=price))+
+  geom_violin(fill="tomato3")+
+  scale_y_continuous(labels = scales::comma)+
+  theme(axis.text.x = element_text(angle = 0),
+        plot.title = element_text(hjust = 0.5))+
+  labs(x="Clarity", y="Price", title="Distribution of Prices by Clarity")
+```
+
+
+
+```{r}
+ggplot(data, aes(x=clarity,y=price))+
+  geom_point(alpha=0.5,col="darkslategrey",size=3)+
+  scale_y_continuous(labels = scales::comma)+
+  labs(x="Clarity", y="Price",title="Scatterplot of Blue Nile Diamond Clarity Against Price")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+data$clarity_modified <- gsub('[0-9.]', '', data$clarity)
+data
+
+data$clarity_modified <-factor(data$clarity_modified, levels =c("SI","VS","VVS","IF", "FL"))
+# Sarah's plot with modified distribution
+ggplot(data, aes(x=clarity_modified, y=price))+
+  scale_y_continuous(labels = scales::comma)+
+  stat_summary(fun = "mean", geom = "bar",fill="darkslategrey")+
+  theme(axis.text.x = element_text(angle = 0),
+        plot.title = element_text(hjust = 0.5))+
+  labs(x="Clarity", y="Price",title="Distribution of Clarity Grouped vs Average Price")
+
+group_mean<- aggregate(x= data$price,
+                       # Specify group indicator
+                       by = list(data$clarity_modified),      
+                       # Specify function (i.e. mean)
+                       FUN = mean)
+print(group_mean)
+
+
+
+#Diamond Clarity by Color
+ggplot(data, aes(x=clarity,fill=color))+
+  geom_bar(stat="count", width=0.7)+
+  theme(axis.text.x = element_text(), 
+        plot.title = element_text(hjust = 0.5))+
+  labs(title = "Diamond Clarity by Color",x="Diamond Clarity", y="Number of Diamonds")
+```
+
+### Carat 
+
+```{r}
+meancarat<-mean(data$carat)
+#Mean carat size is .813
+mediancarat<-median(data$carat)
+#Median carat size is .52
+
+#Checking the spread of just carat
+hist(data$carat,xlab="Carat Weight",ylab="# of Diamonds",main="Distribution of Blue Nile Diamond Carat Size", col='darkslategrey',border='white')
+
+
+```
+  
+
+```{r}
+#Checking the relationship between price and carat
+
+ggplot(data, aes(x=carat, y=price)) +
+  geom_point(size=2.5, col="tomato3",alpha=0.4)+
+  scale_y_continuous(labels = scales::comma)+
+  labs(x="Carat Weight", y="Price",title="Scatterplot of Carat Weight Against Price of Blue Nile Diamonds")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+
+```{r}
+ggplot(data, aes(x=cut, y=price, size=carat)) +
+  geom_point(col="darkslategrey",alpha=0.4)+
+  scale_y_continuous(labels = scales::comma)+
+  labs(x="Carat Weight", y="Price",title="Scatterplot of Cut and Carat Against Price of Blue Nile Diamonds")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r}
+#Get ratio of carat weight per dollar
+pricepercarat<-(data$price/data$carat)
+data<-data.frame(data,pricepercarat)
+
+data$caratratio <-round(data$pricepercarat,3)
+
+data$cut<-factor(data$cut, levels=c("Good","Very Good","Ideal","Astor Ideal"))
+
+ggplot(data,aes(x=cut,y=pricepercarat))+
+  geom_boxplot()+
+  scale_y_continuous(labels = scales::comma)+
+  theme(axis.text.x = element_text(),plot.title=element_text(hjust = 0.5))+
+  labs(x="Cut",y="Price Per Carat", title = "Diamond Cut Against Price per Carat, with Outliers")
+
+ggplot(data, aes(x=carat, y=pricepercarat)) +
+  geom_point(size=2.5, col="darkslategrey",alpha=0.3)+
+  scale_y_continuous(labels = scales::comma)+
+  labs(x="Carat Weight", y="Price",title="Scatterplot of Carat Weight Against Price of Blue Nile Diamonds")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+
+
+
+### Cut 
+
+```{r}
+
+levels(data$cut)
+
+#creating scatterplot to see relationship between cut and price by group
+ggplot(data = data, mapping = aes(x=cut,y=price))+
+  scale_y_continuous(labels = scales::comma)+
+  geom_point(size=2.5, col="darkslategrey",alpha=0.3)+
+   theme(axis.text.x = element_text(), 
+        plot.title = element_text(hjust = 0.5))+
+  geom_smooth(method = lm, se = FALSE)+
+  labs(x="Cut", y = "Price", title = "Diamond Price by Cut Quality")
+
+ggplot(data, aes(x=cut, y=price))+
+  geom_violin()+
+  labs(x="cut", y="price", title="Diamond cut vs price")
+
+
+median_data <- aggregate(data$price,         # Median by group
+          list(data$cut),
+          median)
+median_data
+
+mean_data <- aggregate(data$price,         # mean by group
+          list(data$cut),
+          mean)
+mean_data 
+
+
+ggplot(median_data, aes(x=Group.1, y=x))+
+  geom_bar(fill= 'tomato3', fill="white", stat="identity")+ 
+  theme(axis.text.x = element_text(), 
+        plot.title = element_text(hjust = 0.5))+
+  labs(x="Cut", y="Median Price", title="Median Price by Cut")
+
+ggplot(mean_data, aes(x=Group.1, y=x))+
+  geom_bar(fill= 'darkslategrey', fill="white", stat="identity")+ 
+  theme(axis.text.x = element_text(), 
+        plot.title = element_text(hjust = 0.5))+
+  labs(x="Cut", y="Average Price", title="Average Price by Cut")
+```
+
+```{r}
+# Stacked
+ggplot(data, aes(x=color,fill=cut))+
+  geom_bar(stat="count", width=0.7)+
+    theme(axis.text.x = element_text(), 
+        plot.title = element_text(hjust = 0.5))+
+  labs(title = "Diamond Color by Cut",x="Diamond Color", y="Number of Diamonds")
+```
+
+
+```{r}
+ggplot(data, aes(x=color,fill=clarity))+
+  geom_bar(stat="count", width=0.7)+
+    theme(axis.text.x = element_text(), 
+        plot.title = element_text(hjust = 0.5))+
+  labs(title = "Diamond Color by Clarity",x="Diamond Color", y="Number of Diamonds")
+```
+
+
+```{r}
+# Stacked
+ggplot(data, aes(x=clarity,fill=cut))+
+  geom_bar(stat="count", width=0.7)+
+    theme(axis.text.x = element_text(), 
+        plot.title = element_text(hjust = 0.5))+
+  labs(title = "Diamond Clarity by Cut",x="Diamond Clarity", y="Number of Diamonds")
+```
+
+
+### Price
+
+
+```{r}
+meanprice<-mean(data$price)
+#Mean price is $7,056.74
+medianprice<-median(data$price)
+#Median price is $1,463.50
+```
+
+
+```{r}
+ggplot(data, aes(x=carat, y=price))+
+  geom_point(col="tomato3",alpha=0.6,size=2)+ #scatterplot
+      theme(axis.text.x = element_text(), 
+        plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous(labels = scales::comma)+
+  geom_smooth(method = "lm", se = FALSE,col="darkslategrey")+ #adds linear line 
+  labs(x="Carat", y="Price", title="Effect of Diamond Carat against Price")
+
+```
+ 
+
+```{r}
+caratregr <- lm(price~carat, data=data)
+summary(caratregr)
+```
+
+
+```{r}
+par(mfrow = c(2, 2))
+plot(caratregr)
+```
+
+```{r}
+library(MASS) ##to use boxcox function
+MASS::boxcox(caratregr, lambda = seq(-0.5, 0.5, 1/10))
+
+MASS::boxcox(caratregr, lambda = seq(0.2, 0.4, 1/10))
+```
+ 
+```{r}
+#transform y 
+data$newy<-log(data$price)
+
+#regress new y against x
+result <- lm(newy~carat, data = data)
+
+#create a new residual plot 
+par(mfrow=c(2,2))
+plot(result)
+```
+
+
+```{r}
+ggplot2::ggplot(data, aes(x=carat,y=newy))+
+  geom_point()+
+  geom_smooth(method = "lm", se=FALSE)+
+      theme(axis.text.x = element_text(angle = 90), 
+        plot.title = element_text(hjust = 0.5))+
+  labs(x="Carat", y="Log of Price",
+  title="Log of Price against Carat")
+
+```
+
+
+```{r}
+data$caratstar<-log(data$carat)
+
+ggplot(data, aes(x=caratstar, y=newy))+
+  geom_point()+
+  geom_smooth(method = "lm", se=FALSE)+
+      theme(axis.text.x = element_text(angle = 90), 
+        plot.title = element_text(hjust = 0.5))+
+  labs(x="Log of Carat", y="Log of Price", title="Effect of Regressed Diamond Carat against Regressed Price")
+
+```
+
+
+```{r}
+final_result <- lm(newy~caratstar, data = data)
+
+#create a new residual plot 
+par(mfrow=c(2,2))
+plot(final_result)
+```
+
+
+```{r}
+cor(data$caratstar, data$newy)
+```
+
+
+```{r}
+summary(final_result)
+```
+
+```{r}
+anova.tab <- anova(final_result)
+anova.tab
+```
+ 
+
+```{r}
+qf(0.95,1,1212)
+```
